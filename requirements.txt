@@ -1,0 +1,2 @@
+matplotlib==3.11.1
+scipy==1.18.0
