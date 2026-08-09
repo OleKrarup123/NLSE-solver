@@ -592,7 +592,7 @@ class TimeFreq:
 
 def get_real_field(field_in_time_or_freq_domain: npt.NDArray[complex]
               ) -> npt.NDArray[float]:
-    """
+    r"""
     In optics and many other branches of physics and engineering, the waves
     that actually describe various phenomena are given by
 
@@ -3182,7 +3182,7 @@ def plot_first_and_last_pulse(ssfm_result_list: list[SSFMResult],
                               nrange: int,
                               dB_cutoff: float,
                               **kwargs):
-    """
+    r"""
     Plots input pulse and output pulse of simulation
 
     Line plot of input pulse and output pulse of SSFM run centered in the
@@ -3385,7 +3385,7 @@ def plot_pulse_chirp_2D(ssfm_result_list: list[SSFMResult],
                         nrange: int,
                         dB_cutoff: float,
                         **kwargs):
-    """
+    r"""
     Plots local chirp throughout entire fiber span.
 
     2D colour plot of local chirp throughout entire fiber span with red indicating
@@ -3462,7 +3462,7 @@ def plot_everything_about_pulses(ssfm_result_list: list[SSFMResult],
                                  nrange: int,
                                  dB_cutoff: float,
                                  **kwargs):
-    """
+    r"""
 
 
     Parameters
@@ -3741,7 +3741,7 @@ def plot_everything_about_spectra(ssfm_result_list: list[SSFMResult],
                                   nrange: int,
                                   dB_cutoff: float,
                                   **kwargs):
-    """
+    r"""
     Generates all plots of pulse field throughout the FiberLink
 
     Calls plot_first_and_last_spectrum, plot_spectrum_matrix_2D and
@@ -4598,7 +4598,7 @@ def plot_everything_about_result(
     dB_cutoff_spectrum: float,
     **kwargs,
 ):
-    """
+    r"""
     Generates all plots of pulse & spectrum fields etc. throughout FiberLink
 
     Calls plot_avg_and_std_of_time_and_freq, plot_everything_about_pulses and
@@ -5734,7 +5734,7 @@ def plot_SNR_for_channels(
     channelNumber_list: list[int],
     **kwargs
 ):
-    """
+    r"""
     Plots the SNR for the specified channels throughout the fiber span.
 
     Parameters
