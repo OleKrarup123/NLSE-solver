@@ -15,7 +15,8 @@ NLSE-solver documentation
    :maxdepth: 2
    :caption: Contents:
 
-   modules
+   ssfm_functions
+   ssfm_unit_tests
 
 Indices and tables
 ==================
