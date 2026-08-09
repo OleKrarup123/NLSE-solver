@@ -292,30 +292,6 @@ class Channel:
     """
     Class for storing info about a certain frequency channel.
 
-
-        Illustration of Channel
-
-                <---sig_BW--->
-
-                    sig_c
-                       .
-                       .
-                 ******.******
-                 *     .     *
-                 *     .     *
-         |       *  |  .     * |
-         |       *  |  .     * |
-         |       *  |  .     * |
-         |       *  |  .     * |
-         |       *  |  .     * |
-         |       *  |  .     * |
-         |       *  |  .     * |
-         |       *  |  .     * |
-        _|_______*__|__._____*_|_______ ->f
-    ch_min        ch_cen      ch_max
-
-         <--lg-->           <rg>    
-
     Attributes:
         self.channel_center_freq_Hz : float
             Central frequency of channel.
@@ -1343,16 +1319,14 @@ def zero_func(freq_Hz: npt.NDArray[float]):
 class FiberSpan:
     """
     Class describing a single fiber. Consists of:
-        1) An "input block" that contains input attenuation, input filter,
-        input amplifier and post-amplifier filter.
-        2) The fiber which the signal propagates through
-        3) An "output block" with the same variables as 1) but applied in
-        reverse order.
+    1) An "input block" that contains input attenuation, input filter, input amplifier and post-amplifier filter.
+    2) The fiber which the signal propagates through
+    3) An "output block" with the same variables as 1) but applied in reverse order.
 
     Multiple FiberSpans can be initialized, placed in an array and fed into
     the FiberLink class;
-        fiber_span_list=[fs0,fs2,fs3,...]
-        fiber_link = FiberLink(fiber_span_list)
+    fiber_span_list=[fs0,fs2,fs3,...]
+    fiber_link = FiberLink(fiber_span_list)
     fiber_link is then used as an arguments in the SSFM function along with an
     input signal. The idea is that sometimes, we want to propagate a signal
     through multiple fibers with different properties and then look at the
