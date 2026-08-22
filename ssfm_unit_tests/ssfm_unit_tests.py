@@ -1,7 +1,7 @@
 import os
 import sys
 sys.path.insert(0,os.path.abspath(".."))
-from ssfm_functions.ssfm_functions import *
+from NLSE.ssfm_functions import *
 from scipy.special import airy
 from scipy.optimize import fsolve
 import numpy.typing as npt

@@ -15,5 +15,5 @@ laser pulses through optical fibers where a chi^3 nonlinearity is present.
    :maxdepth: 2
    :caption: Contents:
 
-   ssfm_functions
+   NLSE
    ssfm_unit_tests
