@@ -6,9 +6,9 @@
 NLSE-solver documentation
 =========================
 
-#Add your content using ``reStructuredText`` syntax. See the
-#`reStructuredText <https://www.sphinx-doc.org/en/master/usage/restructuredtext/index.html>`_
-#documentation for details.
+Welcome to the (hopefully!) most flexible and beginner-friendly python library for
+solving the Nonlinear Schrödinger Equation, which models the propagation of
+laser pulses through optical fibers where a chi^3 nonlinearity is present. 
 
 
 .. toctree::
@@ -16,7 +16,6 @@ NLSE-solver documentation
    :caption: Contents:
 
    ssfm_functions
-   ssfm_unit_tests
 
 Indices and tables
 ==================

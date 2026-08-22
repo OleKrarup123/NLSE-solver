@@ -1,47 +1,8 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Mar 19 09:28:50 2024
-
-@author: okrarup
-"""
 
 from ssfm_functions import *
 from scipy.special import airy
 from scipy.optimize import fsolve
-
-# def compare_fiber_links(fiber_link_1: FiberLink,fiber_link_2: FiberLink):
-
-#     for fiber_idx, (fiber_1, fiber_2) in enumerate(zip(fiber_link_1.fiber_list,
-#                                                      fiber_link_2.fiber_list)):
-
-
-#         assert compare_fibers(fiber_1, fiber_2), f"""Fibers at index {fiber_idx} do not match!!!"""
-
-#     return True
-
-# def compare_fibers(fiber_1: FiberSpan, fiber_2: FiberSpan) -> bool:
-#     assert np.isclose(fiber_1.length_m, fiber_2.length_m,rtol=1e-6,atol=1e-100)
-#     assert fiber_1.number_of_steps == fiber_2.number_of_steps
-
-#     assert np.isclose(fiber_1.gamma_per_W_per_m, fiber_2.gamma_per_W_per_m,rtol=1e-6,atol=1e-100)
-
-#     for beta_n_1, beta_n_2 in zip(fiber_1.beta_list, fiber_2.beta_list):
-#         assert np.isclose(beta_n_1,beta_n_2)
-
-#     assert np.isclose(fiber_1.alpha_dB_per_m , fiber_2.alpha_dB_per_m,rtol=1e-6,atol=1e-100)
-#     assert fiber_1.use_self_steepening_flag == fiber_2.use_self_steepening_flag
-#     assert fiber_1.raman_model == fiber_2.raman_model
-#     assert np.isclose(fiber_1.input_amp_dB , fiber_2.input_amp_dB,rtol=1e-6,atol=1e-100)
-#     assert np.isclose(fiber_1.input_noise_factor_dB , fiber_2.input_noise_factor_dB,rtol=1e-6,atol=1e-100)
-#     assert np.isclose(fiber_1.input_atten_dB , fiber_2.input_atten_dB,rtol=1e-6,atol=1e-100)
-#     assert np.isclose(fiber_1.input_disp_comp_s2 , fiber_2.input_disp_comp_s2,rtol=1e-6,atol=1e-100)
-
-#     assert np.isclose(fiber_1.output_amp_dB , fiber_2.output_amp_dB,rtol=1e-6,atol=1e-100)
-#     assert np.isclose(fiber_1.output_noise_factor_dB , fiber_2.output_noise_factor_dB,rtol=1e-6,atol=1e-100)
-#     assert np.isclose(fiber_1.output_atten_dB , fiber_2.output_atten_dB,rtol=1e-6,atol=1e-100)
-#     assert np.isclose(fiber_1.output_disp_comp_s2 , fiber_2.output_disp_comp_s2,rtol=1e-6,atol=1e-100)
-
-#     return True
+import numpy.typing as npt
 
 
 
@@ -49,10 +10,10 @@ from scipy.optimize import fsolve
 
 
 def gaussian_pulse_with_beta_2_only(time_s: npt.NDArray[float],
-                                    duration_s: [float],
-                                    amplitude_sqrt_W: [float],
-                                    beta2_s2_per_m: [float],
-                                    distance_m: [float]) -> npt.NDArray[complex]:
+                                    duration_s: float,
+                                    amplitude_sqrt_W: float,
+                                    beta2_s2_per_m: float,
+                                    distance_m: float) -> npt.NDArray[complex]:
     """
     Analytical solution for propagating a Gaussian pulse through a fiber with
     only 2nd order dispersion. Useful for unit-testing and comparing
@@ -62,13 +23,13 @@ def gaussian_pulse_with_beta_2_only(time_s: npt.NDArray[float],
     ----------
     time_s : npt.NDArray[float]
         Time in seconds.
-    duration_s : [float]
+    duration_s : float
         Duration of Gaussian pulse in seconds.
-    amplitude_sqrt_W : [float]
+    amplitude_sqrt_W : float
         Gaussian pulse amplitude in sqrt(W).
-    beta2_s2_per_m : [float]
+    beta2_s2_per_m : float
         Fiber dispersion in s^2/m.
-    distance_m : [float]
+    distance_m : float
         Fiber length in m.
 
     Returns
@@ -78,7 +39,7 @@ def gaussian_pulse_with_beta_2_only(time_s: npt.NDArray[float],
 
     """
 
-    sigma = np.sqrt(duration_s**2- 1j*beta2_s2_per_m*distance_m)
+    sigma = np.sqrt(duration_s**2 - 1j*beta2_s2_per_m*distance_m)
 
     front_factor = duration_s/sigma
     exponential_factor = np.exp(-0.5*(time_s/sigma)**2)
@@ -87,10 +48,10 @@ def gaussian_pulse_with_beta_2_only(time_s: npt.NDArray[float],
 
 
 def gaussian_pulse_with_beta_3_only(time_s: npt.NDArray[float],
-                                    duration_s: [float],
-                                    amplitude_sqrt_W: [float],
-                                    beta3_s3_per_m: [float],
-                                    distance_m: [float]) -> npt.NDArray[complex]:
+                                    duration_s: float,
+                                    amplitude_sqrt_W: float,
+                                    beta3_s3_per_m: float,
+                                    distance_m: float) -> npt.NDArray[complex]:
     """
     Analytical solution for propagating a Gaussian pulse through a fiber with
     only 3rd order dispersion. Useful for unit-testing and comparing
@@ -100,13 +61,13 @@ def gaussian_pulse_with_beta_3_only(time_s: npt.NDArray[float],
     ----------
     time_s : npt.NDArray[float]
         Time in seconds.
-    duration_s : [float]
+    duration_s : float
         Duration of Gaussian pulse in seconds.
-    amplitude_sqrt_W : [float]
+    amplitude_sqrt_W : float
         Gaussian pulse amplitude in sqrt(W).
-    beta3_s3_per_m : [float]
+    beta3_s3_per_m : float
         Fiber dispersion in s^3/m.
-    distance_m : [float]
+    distance_m : float
         Fiber length in m.
 
     Returns
@@ -132,10 +93,10 @@ def gaussian_pulse_with_beta_3_only(time_s: npt.NDArray[float],
 
 
 def self_steepening_pulse(time_freq: TimeFreq,
-                          duration_s: [float],
-                          amplitude_sqrt_W: [float],
-                          gamma_per_W_m: [float],
-                          distance_m: [float])-> npt.NDArray[complex]:
+                          duration_s: float,
+                          amplitude_sqrt_W: float,
+                          gamma_per_W_m: float,
+                          distance_m: float)-> npt.NDArray[complex]:
 
     w0 = time_freq.center_frequency_Hz*2*np.pi
     s=1/w0/duration_s
@@ -230,7 +191,7 @@ def unit_test_saveload_TimeFreq(show_plot_flag = False):
                                     test_duration_s,
                                     test_amplitude,
                                     test_pulse_type,
-                                    describe_input_signal_flag=False,
+                                    describe_input_signal_flag=show_plot_flag,
                                     FFT_tol=test_FFT_tol)
 
 
@@ -245,7 +206,7 @@ def unit_test_saveload_TimeFreq(show_plot_flag = False):
     )
 
 
-    path_to_json = os.path.join(ssfm_result_list[0].dirs[1],"input_info",'run_info.json')
+    path_to_json = os.path.join(ssfm_result_list[0].dirs[1],'run_info.json') 
     input_signal_loaded = load_input_signal_from_json(path_to_json)
 
     assert input_signal_loaded.time_freq == time_freq_test
@@ -383,7 +344,7 @@ def unit_test_saveload_FiberLink(show_plot_flag = False):
 
 
 
-    path_to_json = os.path.join(ssfm_result_list[0].dirs[1],"input_info",'run_info.json')
+    path_to_json = os.path.join(ssfm_result_list[0].dirs[1],'run_info.json') 
     fiber_link_loaded = load_fiber_link_from_json(path_to_json)
 
     assert fiber_link == fiber_link_loaded
@@ -417,7 +378,7 @@ def unit_test_saveload_InputSignal(show_plot_flag = False):
     time_freq_test = TimeFreq(N,
                               dt,
                               center_freq_test,
-                              describe_time_freq_flag=False)
+                              describe_time_freq_flag=show_plot_flag)
 
 
     # Set up signal
@@ -456,7 +417,7 @@ def unit_test_saveload_InputSignal(show_plot_flag = False):
                                     chirp=1,
                                     phase_rad=pi,
                                     FFT_tol=test_FFT_tol,
-                                    describe_input_signal_flag=False)
+                                    describe_input_signal_flag=show_plot_flag)
 
 
     exp_name = f"unit_test_InputSignal_gauss"
@@ -470,7 +431,7 @@ def unit_test_saveload_InputSignal(show_plot_flag = False):
 
 
 
-    path_to_json = os.path.join(ssfm_result_list[0].dirs[1],"input_info",'run_info.json')
+    path_to_json = os.path.join(ssfm_result_list[0].dirs[1],'run_info.json') 
     input_signal_loaded = load_input_signal_from_json(path_to_json)
 
     field_diff_value = compare_field_energies(input_signal_loaded.pulse_field,
@@ -502,12 +463,12 @@ def unit_test_saveload_InputSignal(show_plot_flag = False):
         experiment_name=exp_name
     )
 
-    path_to_json = os.path.join(ssfm_result_list[0].dirs[1],"input_info",'run_info.json')
+    path_to_json = os.path.join(ssfm_result_list[0].dirs[1],'run_info.json') 
 
     input_signal_loaded = load_input_signal_from_json(path_to_json)
 
     if show_plot_flag:
-        fig,ax = plt.subplots(dpi=300)
+        fig,ax = plt.subplots(dpi=250)
         ax.plot(time_freq_test.t/1e-9,get_power(test_input_signal.pulse_field))
         ax.plot(time_freq_test.t/1e-9,get_power(input_signal_loaded.pulse_field))
         ax.set_xlim(-0.1,0.1)
@@ -554,7 +515,7 @@ def unit_test_beta2(show_plot_flag=False):
     time_freq_test = TimeFreq(N,
                               dt,
                               center_freq_test,
-                              describe_time_freq_flag=False)
+                              describe_time_freq_flag=show_plot_flag)
 
     # Set up signal
     test_FFT_tol = 1e-3
@@ -588,7 +549,7 @@ def unit_test_beta2(show_plot_flag=False):
                                     test_amplitude,
                                     test_pulse_type,
                                     FFT_tol=test_FFT_tol,
-                                    describe_input_signal_flag=False)
+                                    describe_input_signal_flag=show_plot_flag)
 
 
     exp_name = f"unit_test_beta2"
@@ -607,7 +568,7 @@ def unit_test_beta2(show_plot_flag=False):
 
 
     if show_plot_flag:
-        fig,ax=plt.subplots(dpi=300)
+        fig,ax=plt.subplots(dpi=250)
         #ax.plot(time_freq_test.t/1e-9,get_power(test_input_signal.pulse_field),label = "Initial pulse")
         ax.plot(time_freq_test.t/1e-9,get_power(final_pulse),label = "Final pulse numerical")
         ax.plot(time_freq_test.t/1e-9,get_power(theoretical_final_pulse),label = "Final pulse theoretical")
@@ -660,7 +621,7 @@ def unit_test_beta3(show_plot_flag=False):
     time_freq_test = TimeFreq(N,
                               dt,
                               center_freq_test,
-                              describe_time_freq_flag=False)
+                              describe_time_freq_flag=show_plot_flag)
 
 
     # Set up signal
@@ -683,7 +644,7 @@ def unit_test_beta3(show_plot_flag=False):
         beta_list,
         alpha_test,
         use_self_steepening_flag=False,
-        describe_fiber_flag=False)
+        describe_fiber_flag=show_plot_flag)
 
     fiber_list = [fiber_test]  # ,fiber_test_2
     fiber_link = FiberLink(fiber_list)
@@ -695,7 +656,7 @@ def unit_test_beta3(show_plot_flag=False):
                                     test_amplitude,
                                     test_pulse_type,
                                     FFT_tol=test_FFT_tol,
-                                    describe_input_signal_flag=False)
+                                    describe_input_signal_flag=show_plot_flag)
 
     theoretical_final_pulse = gaussian_pulse_with_beta_3_only(time_freq_test.t_s(),
                                     test_duration_s,
@@ -715,7 +676,7 @@ def unit_test_beta3(show_plot_flag=False):
 
 
     if show_plot_flag:
-        fig,ax=plt.subplots(dpi=300)
+        fig,ax=plt.subplots(dpi=250)
         #ax.plot(time_freq_test.t/1e-9,get_power(test_input_signal.pulse_field),label = "Initial pulse")
         ax.plot(time_freq_test.t/1e-9,get_power(final_pulse),label = "Final pulse numerical")
         ax.plot(time_freq_test.t/1e-9,get_power(theoretical_final_pulse),label = "Final pulse theoretical")
@@ -757,7 +718,7 @@ def unit_test_SPM(show_plot_flag=False):
     time_freq_test = TimeFreq(N,
                               dt,
                               center_freq_test,
-                              describe_time_freq_flag=False)
+                              describe_time_freq_flag=show_plot_flag)
 
     # Set up signal
     test_FFT_tol = 1e-3
@@ -779,7 +740,7 @@ def unit_test_SPM(show_plot_flag=False):
         beta_list,
         alpha_test,
         use_self_steepening_flag=False,
-        describe_fiber_flag=False)
+        describe_fiber_flag=show_plot_flag)
 
     fiber_list = [fiber_test]  # ,fiber_test_2
     fiber_link = FiberLink(fiber_list)
@@ -791,7 +752,7 @@ def unit_test_SPM(show_plot_flag=False):
                                     test_amplitude,
                                     test_pulse_type,
                                     FFT_tol=test_FFT_tol,
-                                    describe_input_signal_flag=False)
+                                    describe_input_signal_flag=show_plot_flag)
 
 
     exp_name = f"unit_test_SPM"
@@ -812,7 +773,7 @@ def unit_test_SPM(show_plot_flag=False):
 
 
     if show_plot_flag:
-        fig,ax=plt.subplots(dpi=300)
+        fig,ax=plt.subplots(dpi=250)
         ax.plot(time_freq_test.t/1e-9,get_power(final_pulse),label = "Final pulse numerical")
         ax.plot(time_freq_test.t/1e-9,get_power(theoretical_final_pulse),label = "Final pulse theoretical")
         ax.set_xlim(-0.5,0.5)
@@ -827,7 +788,7 @@ def unit_test_SPM(show_plot_flag=False):
         )
         plt.show()
 
-        fig,ax=plt.subplots(dpi=300)
+        fig,ax=plt.subplots(dpi=250)
         ax.plot(time_freq_test.f/1e12,get_power(get_spectrum_from_pulse(time_freq_test.t, final_pulse) ),label = "Final spectrum numerical")
         ax.plot(time_freq_test.f/1e12,get_power(get_spectrum_from_pulse(time_freq_test.t, theoretical_final_pulse)),label = "Final spectrum theoretical")
         ax.set_xlim(-0.5,0.5)
@@ -850,7 +811,7 @@ def unit_test_SPM(show_plot_flag=False):
     assert normalized_energy_diff<error_tol, f"""ERROR: Normalized energy
     difference between numerical and theoretical pulses is
     {normalized_energy_diff =}, but it should be less than or equal to {error_tol = }.
-    Unit test for dispersion with gamma only FAILED!!!"""
+    Unit test for gamma only FAILED!!!"""
 
     print("Unit test for nonlinearity with gamma only SUCCEEDED!")
     print("  ")
@@ -885,7 +846,7 @@ def unit_test_self_steepening(show_plot_flag=False):
     time_freq_test = TimeFreq(N,
                               dt,
                               centerFreq_test,
-                              describe_time_freq_flag=False)
+                              describe_time_freq_flag=show_plot_flag)
 
     beta_list = [0.0]
 
@@ -900,7 +861,7 @@ def unit_test_self_steepening(show_plot_flag=False):
     alpha_test = 0
 
     number_of_steps = 2**9
-    testDuration = 2.0540097191959133e-14
+    test_duration_s = 2.0540097191959133e-14
     length_test = 8
     spanloss = alpha_test * length_test
 
@@ -911,36 +872,29 @@ def unit_test_self_steepening(show_plot_flag=False):
         beta_list,
         alpha_test,
         use_self_steepening_flag=True,
-        describe_fiber_flag=False)
+        describe_fiber_flag=show_plot_flag)
 
     fiber_list = [fiber_test]
     fiber_link = FiberLink(fiber_list)
 
     # Set up signal
     test_FFT_tol = 1e-3
-    testTimeOffset = 0  # Time offset
-    testFreqOffset = 0  # Freq offset from center frequency
-
-    testChirp = 0
-    testPulseType = "gauss"
-    testOrder = 1
-    testNoiseAmplitude = 0
-
-    testAmplitude = 12.77595660095293
+    test_pulse_type = "gauss"
+    test_amplitude_sqrt_W = 12.77595660095293
 
     test_input_signal = InputSignal(time_freq_test,
-                                    testDuration,
-                                    testAmplitude,
-                                    testPulseType,
+                                    test_duration_s,
+                                    test_amplitude_sqrt_W,
+                                    test_pulse_type,
                                     FFT_tol=test_FFT_tol,
-                                    describe_input_signal_flag=False)
+                                    describe_input_signal_flag=show_plot_flag)
 
     #Choice of length, duration and power should ensure s=0.01 and Z=10
     #to match fig. 4.19 in Agrawal.
     print("Starting theoretical ss pulse.")
     theoretical_final_pulse=self_steepening_pulse(time_freq_test,
-                              testDuration,
-                              testAmplitude,
+                              test_duration_s,
+                              test_amplitude_sqrt_W,
                               gamma_test,
                               length_test)
 
@@ -961,11 +915,11 @@ def unit_test_self_steepening(show_plot_flag=False):
 
 
     if show_plot_flag:
-        fig,ax=plt.subplots(dpi=300)
-        ax.plot(time_freq_test.t/testDuration,get_power(final_pulse)/testAmplitude**2,label = "Final pulse numerical")
-        ax.plot(time_freq_test.t/testDuration,get_power(theoretical_final_pulse),label = "Final pulse theoretical")
-        ax.plot(time_freq_test.t/testDuration,get_power(initial_pulse)/testAmplitude**2,alpha=0.4,label = "Initial pulse")
-        ax.set_xlim(-3*testDuration/testDuration,3*testDuration/testDuration)
+        fig,ax=plt.subplots(dpi=250)
+        ax.plot(time_freq_test.t/test_duration_s,get_power(final_pulse)/test_amplitude_sqrt_W**2,label = "Final pulse numerical")
+        ax.plot(time_freq_test.t/test_duration_s,get_power(theoretical_final_pulse),label = "Final pulse theoretical")
+        ax.plot(time_freq_test.t/test_duration_s,get_power(initial_pulse)/test_amplitude_sqrt_W**2,alpha=0.4,label = "Initial pulse")
+        ax.set_xlim(-3*test_duration_s/test_duration_s,3*test_duration_s/test_duration_s)
         ax.set_ylim(0,1.02)
         ax.spines["top"].set_visible(False)
         ax.spines["right"].set_visible(False)
@@ -980,7 +934,7 @@ def unit_test_self_steepening(show_plot_flag=False):
 
 
 
-    normalized_energy_diff = compare_field_energies(np.abs(final_pulse/testAmplitude),
+    normalized_energy_diff = compare_field_energies(np.abs(final_pulse/test_amplitude_sqrt_W),
                                                     theoretical_final_pulse)
 
     assert normalized_energy_diff<8.12e-07, f"""ERROR: Normalized energy
@@ -1028,7 +982,7 @@ def unit_test_photon_number_conservation_no_raman(show_plot_flag=False):
     test_amplitude = 0.25
     test_duration_s = 12e-12
 
-    alpha_test = 0#-0.22/1e3  # dB/m
+    alpha_test = 0# dB/m
     beta_list = [-10.66e-26,10.66e-36,-10.66e-46]  # [s^2/m,s^3/m,...]  s^(entry+2)/m
     gamma_test = 1e-2  # 1/W/m
     length_test = 12e3  # m
@@ -1126,7 +1080,9 @@ def ssfm_with_everything(show_plot_flag = False):
                                     test_amplitude_sqrt_W,
                                     test_pulse_type,
                                     freq_offset_Hz=test_freq_offset_Hz,
-                                    FFT_tol=test_FFT_tol)
+                                    FFT_tol=test_FFT_tol,
+                                    describe_input_signal_flag=show_plot_flag
+                                    )
 
 
 
@@ -1210,6 +1166,15 @@ def unit_tests_nonlinear(show_plot_flag=False):
     unit_test_photon_number_conservation_no_raman(show_plot_flag)
 
 def run_all_unit_tests(show_plot_flag = False):
+    """
+    This master function first runs a split step simulation where all linear and nonlinear effects 
+    are present and compares the output to a hard-coded result calculated previously. If the two
+    agree, the test suite passes. Otherwise, more granular tests that simulate different effects
+    in isolation are run to narrow down the source of the error. 
+
+    Args:
+        show_plot_flag (bool, optional): _description_. Defaults to False.
+    """
 
 
     print("  ")
