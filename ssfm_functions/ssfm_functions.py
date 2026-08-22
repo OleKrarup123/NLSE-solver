@@ -604,16 +604,16 @@ def get_real_field(field_in_time_or_freq_domain: npt.NDArray[complex]
     In optics and many other branches of physics and engineering, the waves
     that actually describe various phenomena are given by
 
-    A_real = A_0 * cos(beta*z-w*t+phi)
+    A_real = A_0  cos(beta.z-w.t+phi)
 
     However, accounting for phase shifts and interference is a lot easier if
     we instead use
 
-    A_complex = |A_0|*exp(i[beta*z-w*t+phi]),
+    A_complex = |A_0|exp(i[beta.z-w.t+phi]),
 
     where
 
-    A_real = 0.5*(A_complex+ cc{A_complex}) = real{A_complex}.
+    A_real = 0.5(A_complex+ cc{A_complex}) = real{A_complex}.
 
 
 
