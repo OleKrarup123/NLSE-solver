@@ -1,8 +1,7 @@
 examples package
 ================
 
-Submodules
-----------
+
 
 examples.solitons module
 ------------------------
@@ -12,15 +11,18 @@ examples.solitons module
    :show-inheritance:
    :undoc-members:
 
+
+
+examples.raman module
+------------------------
+
 .. automodule:: examples.raman
    :members:
    :show-inheritance:
    :undoc-members:
 
-Module contents
----------------
 
-.. automodule:: examples
-   :members:
-   :show-inheritance:
-   :undoc-members:
+
+
+
+
