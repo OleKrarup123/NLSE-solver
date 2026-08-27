@@ -3,23 +3,17 @@ examples package
 
 
 
-examples.solitons module
+examples module
 ------------------------
 
-.. automodule:: examples.solitons
+.. automodule:: examples
    :members:
    :show-inheritance:
    :undoc-members:
 
 
 
-examples.raman module
-------------------------
 
-.. automodule:: examples.raman
-   :members:
-   :show-inheritance:
-   :undoc-members:
 
 
 
