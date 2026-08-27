@@ -46,7 +46,7 @@ def simulate_raman(number_of_steps=2**8,show_plots=False):
 
 
     ################ Set up fibers ################ 
-    alpha_dB_per_km = 0 #dB/m
+    alpha_dB_per_m = 0 #dB/m
     beta_list = [BETA2_AT_1550_NM_TYPICAL_SMF_S2_PER_M/50]  #[s^2/m,s^3/m,...]  s^(entry+2)/m
     
     gamma_W_per_m =  1e-3 # 1/W/m
@@ -60,7 +60,7 @@ def simulate_raman(number_of_steps=2**8,show_plots=False):
         number_of_steps,
         gamma_W_per_m,
         beta_list,
-        alpha_dB_per_km,
+        alpha_dB_per_m,
         raman_model="none")
 
     fiber_agrawal = FiberSpan(
@@ -68,7 +68,7 @@ def simulate_raman(number_of_steps=2**8,show_plots=False):
         number_of_steps,
         gamma_W_per_m,
         beta_list,
-        alpha_dB_per_km,
+        alpha_dB_per_m,
         raman_model="agrawal")
 
     fiber_silica = FiberSpan(
@@ -76,7 +76,7 @@ def simulate_raman(number_of_steps=2**8,show_plots=False):
         number_of_steps,
         gamma_W_per_m,
         beta_list,
-        alpha_dB_per_km,
+        alpha_dB_per_m,
         raman_model="silica_exact")
 
     #Define a fiber, which is identical to the one above but approximates the Raman effect using the time derivative of the local power.
@@ -87,7 +87,7 @@ def simulate_raman(number_of_steps=2**8,show_plots=False):
         number_of_steps,
         gamma_W_per_m,
         beta_list,
-        alpha_dB_per_km,
+        alpha_dB_per_m,
         raman_model="silica_exact",
         approximate_raman_flag=True)
 
@@ -97,7 +97,7 @@ def simulate_raman(number_of_steps=2**8,show_plots=False):
         number_of_steps,
         gamma_W_per_m,
         beta_list,
-        alpha_dB_per_km,
+        alpha_dB_per_m,
         raman_model="custom")
 
     fiber_custom.raman_in_time_domain_func = lambda t_delay: ( (np.sin(t_delay/10e-15)+0.2*np.sin(t_delay/3e-15))*np.exp(-(t_delay/50e-15)**2))/1.1755126497259335e-14

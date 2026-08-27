@@ -32,7 +32,7 @@ def simulate_solitons():
 
 
     ################ Set up fibers ################ 
-    alpha_dB_per_km = 0 #dB/m
+    alpha_dB_per_m = 0 #dB/m
     beta_list = [BETA2_AT_1550_NM_TYPICAL_SMF_S2_PER_M]   #[s^2/m,s^3/m,...]  s^(entry+2)/m
     
     gamma_W_per_m =  1e-3 # 1/W/m
@@ -45,7 +45,7 @@ def simulate_solitons():
         number_of_steps,
         gamma_W_per_m,
         beta_list,
-        alpha_dB_per_km)
+        alpha_dB_per_m)
     fiber_link = FiberLink([fiber]) #The SSFM solver needs a "FiberLink" class, which is generated from a list of 1 or more fibers. 
 
     #Set up identical fiber with no nonlinearity for comparison
@@ -54,7 +54,7 @@ def simulate_solitons():
         number_of_steps,
         0,
         beta_list,
-        alpha_dB_per_km)
+        alpha_dB_per_m)
     fiber_link_no_NL = FiberLink([fiber_no_NL]) #The SSFM solver needs a "FiberLink" class, which is generated from a list of 1 or more fibers. 
 
 

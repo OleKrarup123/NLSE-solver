@@ -19,7 +19,7 @@ if __name__ == "__main__":
     ssfm_result_list_list = simulate_raman(number_of_steps=2**6,show_plots=False)
 
     #Make animated 2x2 gif of the local chirp.
-    #make_chirp_gif_2x2(ssfm_result_list_list,title_list = ["No Raman", "Agrawal", "Silica Exact", "Custom"],nrange=500,chirp_range_Hz= [-75e12, 75e12],framerate= 30)
+    make_chirp_gif_2x2(ssfm_result_list_list,title_list = ["No Raman", "Agrawal", "Silica Exact", "Custom"],nrange=500,chirp_range_Hz= [-20e12, 20e12],framerate= 30)
 
 
     ## Now make animated gif of the evolution of the spectrogram of a single signal.

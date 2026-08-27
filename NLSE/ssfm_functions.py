@@ -3875,7 +3875,7 @@ def make_chirp_gif(ssfm_result_list: list[SSFMResult],
     lc = LineCollection(segments, cmap=cmap1, norm=norm)
     lc.set_array(
         get_chirp(time_freq.t_s()[Nmin:Nmax],
-                  matrix[len(zvals) - 1, Nmin:Nmax])
+                  matrix[len(zvals) - 1, Nmin:Nmax])/1e9
     )
 
     # Initialize figure
@@ -3915,9 +3915,8 @@ def make_chirp_gif(ssfm_result_list: list[SSFMResult],
         lc = LineCollection(segments, cmap=cmap1, norm=norm)
 
         # Activate norm function based on local chirp
-
         lc.set_array(
-            get_chirp(time_freq.t_s()[Nmin:Nmax], matrix[i, Nmin:Nmax]))
+            get_chirp(time_freq.t_s()[Nmin:Nmax], matrix[i, Nmin:Nmax])/1e9)
         # Plot line
         line = ax.add_collection(lc)
 
@@ -4033,25 +4032,25 @@ def make_chirp_gif_2x2(ssfm_result_list_list: list[list[SSFMResult]],
     lc_0 = LineCollection(segments_0, cmap=cmap1, norm=norm)
     lc_0.set_array(
         get_chirp(timeFreq.t_s()[Nmin:Nmax],
-                  matrix_0[len(zvals) - 1, Nmin:Nmax])
+                  matrix_0[len(zvals) - 1, Nmin:Nmax])/1e9
     )
 
     lc_1 = LineCollection(segments_1, cmap=cmap1, norm=norm)
     lc_1.set_array(
         get_chirp(timeFreq.t_s()[Nmin:Nmax],
-                  matrix_1[len(zvals) - 1, Nmin:Nmax])
+                  matrix_1[len(zvals) - 1, Nmin:Nmax])/1e9
     )
 
     lc_2 = LineCollection(segments_2, cmap=cmap1, norm=norm)
     lc_2.set_array(
         get_chirp(timeFreq.t_s()[Nmin:Nmax],
-                  matrix_2[len(zvals) - 1, Nmin:Nmax])
+                  matrix_2[len(zvals) - 1, Nmin:Nmax])/1e9
     )
 
     lc_3 = LineCollection(segments_3, cmap=cmap1, norm=norm)
     lc_3.set_array(
         get_chirp(timeFreq.t_s()[Nmin:Nmax],
-                  matrix_3[len(zvals) - 1, Nmin:Nmax])
+                  matrix_3[len(zvals) - 1, Nmin:Nmax])/1e9
     )
 
     # Initialize figure
@@ -4179,7 +4178,7 @@ def make_chirp_gif_2x2(ssfm_result_list_list: list[list[SSFMResult]],
 
 def make_chirp_gif_2x1(ssfm_result_list_list: list[list[SSFMResult]],
                        nrange: int,
-                       chirp_range_Hz: list[float] = [-20, 20],
+                       chirp_range_Hz: list[float] = [-20e9, 20e9],
                        framerate: int = 30):
     """
     Animate pulse evolution as .gif and show local chirp
