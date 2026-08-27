@@ -1392,11 +1392,15 @@ class FiberSpan:
             self.relative_raman_contribution = 0.0
             self.raman_in_time_domain_func = zero_func
 
-        # Raman parameters taken from Govind P. Agrawal's book,
-        # "Nonlinear Fiber Optics".
+        if str(self.raman_model).lower() == "custom":
+            self.raman_model = "custom"
+            self.relative_raman_contribution = 0.0
+            self.raman_in_time_domain_func = zero_func
 
         #TODO: Implement other Raman models.
         elif str(self.raman_model).lower() == "agrawal":
+            # Raman parameters taken from Govind P. Agrawal's book, "Nonlinear Fiber Optics"
+
             # Relative contribution of Raman effect to overall nonlinearity
             self.relative_raman_contribution = 0.18
 
@@ -1555,6 +1559,18 @@ class FiberSpan:
 
         if self.describe_fiber_flag:
             self.describe_fiber()
+
+    def plot_raman_response(self):
+        t_delay = np.linspace(0,1000e-15,2000) #Molecular vibrations rarely last longer than 1000 fs.
+        response = self.raman_in_time_domain_func(t_delay)
+
+        fig,ax=plt.subplots()
+        ax.plot(t_delay/1e-15,response/1e15,label=self.raman_model)
+        ax.set_xlabel("T_delay [fs]")
+        ax.set_ylabel("Response [1/fs]")
+        ax.set_ylim(-0.02,0.06)
+        ax.legend()
+        plt.show()
 
     def zero_disp_freq_distance_Hz(self, mode: str = "smallest"):
 
@@ -3054,8 +3070,6 @@ def get_total_run_time_s(ssfm_result_list: list[SSFMResult]):
 
 def save_plot(basename: str):
     """
-    Helper function for adding file type suffix to name of plot
-
     Helper function for adding file type suffix to name of plot
 
     Parameters:
@@ -4673,24 +4687,28 @@ def plot_first_and_last_spectrogram(ssfm_result_list: list[SSFMResult],
     output_pulse = ssfm_result_list[-1].pulse_matrix[-1,:]
 
     time_freq = ssfm_result_list[0].input_signal.time_freq
-
+    save_path = os.path.join(ssfm_result_list[0].dirs[0],ssfm_result_list[0].experiment_name)
     plot_spectrogram(time_freq ,
                          input_pulse ,
                          nrange_pulse,
                          nrange_spectrum,
                          time_resolution_s ,
+                         fiber=ssfm_result_list[0].fiber,
                          dB_cutoff=dB_cutoff,
-                         label='First',
-                         fiber=ssfm_result_list[0].fiber)
+                         label=f'First',
+                         save_path = save_path
+                         )
 
     plot_spectrogram(time_freq ,
                          output_pulse ,
                          nrange_pulse,
                          nrange_spectrum,
                          time_resolution_s ,
+                         fiber=ssfm_result_list[-1].fiber,
                          dB_cutoff=dB_cutoff,
-                         label='Last',
-                         fiber=ssfm_result_list[-1].fiber)
+                         label=f'Last',
+                         save_path=save_path
+                         )
 
 
 
@@ -4702,7 +4720,8 @@ def plot_spectrogram(time_freq:TimeFreq,
                      time_resolution_s:float,
                      dB_cutoff: float = -60,
                      label=None,
-                     fiber: FiberSpan = None):
+                     fiber: FiberSpan = None,
+                     save_path: str = None):
     t=time_freq.t_s()
     #pulse = pulse[Nmin_pulse:Nmax_pulse]
     fc=time_freq.center_frequency_Hz
@@ -4759,7 +4778,7 @@ def plot_spectrogram(time_freq:TimeFreq,
     scaling_factor_freq, prefix_freq = get_units(f_rel[-1])
 
     fig, ax = plt.subplots()
-    ax.set_title("Wavelet transform of pulse")
+    ax.set_title(f"Spectrogram of {label} pulse")
     T, F = np.meshgrid(t, f_abs[Nmin_spectrum:Nmax_spectrum])
 
     surf = ax.contourf(T / scaling_factor_time, F / scaling_factor_freq, lin_to_dB( Z) , levels=40)
@@ -4782,10 +4801,10 @@ def plot_spectrogram(time_freq:TimeFreq,
     #     f_ZD_Hz=fc+fiber.zero_disp_freq_distance_Hz()
     #     ax.axhline(y=f_ZD_Hz/1e12,linestyle='--',color='gray')
 
+    save_str = os.path.join(save_path,f"{label}_spectrogram.png")
+    print(f"Saving spectrogram to {save_str}")
+    plt.savefig(save_str, bbox_inches="tight", pad_inches=0)
 
-
-
-    save_plot(f"wavelet_{label}")
     plt.show()
 
 
