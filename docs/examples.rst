@@ -12,6 +12,11 @@ examples.solitons module
    :show-inheritance:
    :undoc-members:
 
+.. automodule:: examples.raman
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
 Module contents
 ---------------
 
