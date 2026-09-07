@@ -2776,7 +2776,7 @@ def run_SSFM_from_json(path_to_json:str,
 
 
 def SSFM(
-    fiber_link: FiberLink,
+    fiber: FiberSpan | list[FiberSpan] | FiberLink,
     input_signal: InputSignal,
     experiment_name: str = "most_recent_run",
     show_progress_flag: bool = False,
@@ -2792,7 +2792,7 @@ def SSFM(
     4) Returns list of SSFMResult objects
 
     Parameters:
-    fiber_link (FiberLink): Class holding fibers through which the signal is propagated
+    fiber (FiberSpan or list[FiberSpan] or FiberLink): Fibers through which the signal is propagated. Can either be a single FiberSpan object, a list of these or a FiberLink class.
     input_signal (InputSignal): Class holding info about initial input signal
     experiment_name ="most_recent_run" (str) (optional): Name of folder for present simulation.
     show_progress_flag = False (bool) (optional): Print percentage progress to terminal?
@@ -2807,15 +2807,24 @@ def SSFM(
 
     print("########### Initializing SSFM!!! ###########")
 
+    #Quick check that allows users to pass in both a single FiberSpan, a list of FiberSpan objects or a FiberLink object.
+    #Previous versions forced users to build the FiberLink class manually and pass it in, so this is more convenient. 
+    if type(fiber) == FiberSpan:
+        fiber_link = FiberLink([fiber])
+    elif type(fiber) == list:
+        fiber_link = FiberLink(fiber)
+    elif type(fiber) == FiberLink:
+        fiber_link = fiber
+
+
 
 
     FFT_tol = input_signal.FFT_tol
     t = input_signal.time_freq.t_s()
-    # dt = input_signal.time_freq.t_s()ime_step_s
     f_rel_Hz = input_signal.time_freq.f_rel_Hz()
     df = input_signal.time_freq.freq_step_Hz
-    fc = input_signal.time_freq.center_frequency_Hz
     f_abs_Hz = input_signal.time_freq.f_abs_Hz()
+
     # Create output directory, switch to it and return
     # appropriate paths and current time
     dirs, current_time = create_output_directory(experiment_name)
@@ -5987,8 +5996,6 @@ def load_input_signal_from_json(path_to_json:str) -> InputSignal:
     return input_signal
 
 if __name__ == "__main__":
-    #file:///C:/Users/olekr/AppData/Local/Temp/be2f279f-b72d-4739-b725-574e04663f02_28938380.zip.f02/Temporal_Reflections-10.pdf
-    np.random.seed(123)
 
 
     os.chdir(os.path.realpath(os.path.dirname(__file__)))
@@ -5996,16 +6003,16 @@ if __name__ == "__main__":
 
 
     N = 2 ** 15  # Number of points
-    dt = 2.6e-15  # Time resolution [s]
+    dt = 2.6e-12  # Time resolution [s]
 
-    center_freq_test = wavelength_to_freq(1550e-9)#FREQ_CENTER_C_BAND_HZ*3
-    time_freq_test = TimeFreq(number_of_points=N,
+    center_freq = wavelength_to_freq(1550e-9)#FREQ_CENTER_C_BAND_HZ*3
+    time_freq = TimeFreq(number_of_points=N,
                               time_step_s=dt,
-                              center_frequency_Hz=center_freq_test)
+                              center_frequency_Hz=center_freq)
 
 
 
-    alpha_test = 0#-0.22/1e3  # dB/m
+    alpha = 0#-0.22/1e3  # dB/m
 
 
     # beta_list = [-3.051721e-27,
@@ -6023,117 +6030,28 @@ if __name__ == "__main__":
     #-25e-3 (1e-12)^2 s^2/m
     #-25e-27 s^2/m
 
-    gamma_test = 0.25# 1*1e-3  # 1/W/m
+    gamma_test = 1e-3  # 1/W/m
 
-    length_test = 100#0.05  # m
-    number_of_steps = 2**10
+    length = 1e3#0.05  # m
+    number_of_steps = 2**6
 
     fiber_test = FiberSpan(
-        length_test,
+        length,
         number_of_steps,
         gamma_test,
         beta_list,
-        alpha_test)
+        alpha)
 
-    pulse_amplitude2_sqrt_W = np.sqrt(0.1/gamma_test)
+    A_sqrt_W = np.sqrt(1) #5kW peak power
+    duration_s = 100e-12 #15fs duration
 
+    input_signal= InputSignal(time_freq,
+                   amplitude_sqrt_W=A_sqrt_W,
+                   duration_s=duration_s,
+                   pulse_type="gauss",
+                   describe_input_signal_flag=False)
 
-    # Set up signal
-    test_FFT_tol = 1e-2
+    ssfm_result_list      = SSFM(fiber=fiber_test,input_signal=input_signal)
+    ssfm_result_list      = SSFM(fiber=[fiber_test,fiber_test,fiber_test],input_signal=input_signal)
+    ssfm_result_list      = SSFM(fiber=FiberLink([fiber_test,fiber_test,fiber_test]),input_signal=input_signal)
 
-    pulse_duration_s = 0.5e-12
-    rep_rate_Hz = 50e6
-    avg_pow_W=1e-3
-    pulse_type = 'square'
-    pulse_freq_offset_Hz = (3183098861837.907)
-    pulse_amplitude_sqrt_W =pulse_amplitude2_sqrt_W/5
-
-    #Pulse to be reflected
-    test_input_signal = InputSignal(time_freq_test,
-                                    pulse_duration_s,
-                                    amplitude_sqrt_W = pulse_amplitude_sqrt_W,
-                                    pulse_type=pulse_type,
-                                    freq_offset_Hz=pulse_freq_offset_Hz,
-                                    time_offset_s=-5e-12,
-                                    FFT_tol=test_FFT_tol)
-
-    #Pulse working as a mirror
-    duration2_s=10e-12
-    avg_pow2_W=0#200e-3
-    
-    time_offset=duration2_s
-    test_input_signal.pulse_field+= get_pulse(time_freq_test.t_s(),
-                                              duration2_s,
-                                              amplitude_sqrt_W=pulse_amplitude2_sqrt_W,
-                                              time_offset_s =time_offset,
-                                              pulse_type="square")
-
-    test_input_signal.update_spectrum()
-    test_input_signal.describe_input_signal()
-
-
-
-
-    
-
-    fiber_list = [fiber_test]
-    fiber_link = FiberLink(fiber_list)
-
-
-
-
-    exp_name='temporal_reflection'
-    ssfm_result_list = SSFM(
-        fiber_link,
-        test_input_signal,
-        show_progress_flag=True,
-        experiment_name=exp_name
-    )
-
-    #nrange = 1400#1600
-    dB_cutoff = -120
-    
-    plot_first_and_last_pulse(ssfm_result_list, nrange=16000, dB_cutoff=dB_cutoff)
-    plot_first_and_last_spectrum(ssfm_result_list, nrange=1600, dB_cutoff=dB_cutoff)
-  
-    plot_pulse_matrix_2D(ssfm_result_list, nrange=8000, dB_cutoff = dB_cutoff)
-    plot_spectrum_matrix_2D(ssfm_result_list, nrange=1600, dB_cutoff = dB_cutoff)
-
-
-    assert 1==2
-
-    final_spectrum = ssfm_result_list[-1].spectrum_field_matrix[-1,:]
-    final_spectrum_CW = extract_spectrum_range(time_freq_test.f_abs_Hz(),
-                                                final_spectrum,
-                                                FREQ_1550_NM_HZ-2e9,
-                                                FREQ_1550_NM_HZ+2e9)
-
-    initial_spectrum = ssfm_result_list[-1].spectrum_field_matrix[0,:]
-    initial_spectrum_CW = extract_spectrum_range(time_freq_test.f_abs_Hz(),
-                                                initial_spectrum,
-                                                FREQ_1550_NM_HZ-2e9,
-                                                FREQ_1550_NM_HZ+2e9)
-
-
-
-    final_pulse_CW = get_pulse_from_spectrum(time_freq_test.f_rel_Hz(), final_spectrum_CW,FFT_tol=1e-2)
-    initial_pulse_CW = get_pulse_from_spectrum(time_freq_test.f_rel_Hz(), initial_spectrum_CW,FFT_tol=1e-2)
-
-    fig,ax=plt.subplots()
-    ax.plot(time_freq_test.t_s()/1e-9,get_phase(initial_pulse_CW),label='Initial CW phase')
-    ax.plot(time_freq_test.t_s()/1e-9,get_phase(final_pulse_CW),label='Final CW phase')
-    #ax.set_xlim(-5,5)
-    ax.set_xlabel('Time [ns] ')
-    ax.set_ylabel('Phase [rad] ')
-    ax.legend()
-    plt.show()
-
-
-    fig,ax=plt.subplots()
-    ax.plot(time_freq_test.t_s()/1e-9,get_phase(initial_pulse_CW),label='Initial CW phase')
-    ax.plot(time_freq_test.t_s()/1e-9,get_phase(final_pulse_CW),label='Final CW phase')
-    ax.set_xlim(-5,5)
-    ax.set_xlabel('Time [ns] ')
-    ax.set_ylabel('Phase [rad] ')
-    ax.legend()
-    plt.show()
