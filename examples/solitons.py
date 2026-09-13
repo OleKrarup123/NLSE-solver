@@ -83,15 +83,15 @@ def simulate_solitons():
 
 
     ################ Run split step simulations ################ 
-    ssfm_result_list_order_2_no_NL = SSFM(fiber_link=fiber_link_no_NL,
+    ssfm_result_list_order_2_no_NL = SSFM(fiber=fiber_link_no_NL,
                                input_signal=input_signal_order_2,
                                show_progress_flag=True)
 
-    ssfm_result_list_order_2 = SSFM(fiber_link=fiber_link,
+    ssfm_result_list_order_2 = SSFM(fiber=fiber_link,
                                input_signal=input_signal_order_2,
                                show_progress_flag=True)
 
-    ssfm_result_list_order_4 = SSFM(fiber_link=fiber_link,
+    ssfm_result_list_order_4 = SSFM(fiber=fiber_link,
                                input_signal=input_signal_order_4,
                                show_progress_flag=True)
 

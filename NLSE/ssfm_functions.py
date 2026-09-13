@@ -1690,7 +1690,13 @@ class FiberSpan:
 @dataclass
 class FiberLink:
     """
-    Class for storing info about multiple concatenated fibers.
+    Class for storing info about multiple concatenated fibers. When running SSFM with a single 
+    FiberSpan object or a list of these as an argument, they will automatically be converted
+    into a FiberLink object. The user can also define the FiberLink object manually and use
+    this as an argument to SSFM. This may be useful since FiberLink makes it easy to 
+    calculate certain quantities of interest, such as total loss of a set of fibers or
+    the total dispersion. 
+  
 
     Attributes:
         fiber_list (list[FiberSpan]): List of FiberSpan objects
@@ -3005,7 +3011,7 @@ def SSFM(
                 output_filter_field_array = output_filter
                 output_disp_comp_factor = np.exp(1j*fiber.output_disp_comp_s2*(2*pi*f_rel_Hz)**2)
 
-                output_amp_field_factor = 10 ** (fiber.output_amp_dB / 20)
+                output_amp_field_factor = dB_to_lin(fiber.output_amp_dB/2)
                 noise_ASE_array = randomPhaseFactor * np.sqrt(
                     get_noise_PSD(
                         fiber.output_noise_factor_dB,
@@ -5283,7 +5289,7 @@ def dB_to_lin(Val_dB: float) -> float:
         Value in decimal.
 
     """
-    return 10 ** (Val_dB / 10)
+    return np.power(10,Val_dB / 10)
 
 
 def lin_to_dB(Val_lin: float) -> float:
@@ -6003,16 +6009,23 @@ if __name__ == "__main__":
 
 
     N = 2 ** 15  # Number of points
-    dt = 2.6e-12  # Time resolution [s]
+    dt = 1e-12  # Time resolution [s]
 
-    center_freq = wavelength_to_freq(1550e-9)#FREQ_CENTER_C_BAND_HZ*3
+    center_freq = wavelength_to_freq(1550e-9)
     time_freq = TimeFreq(number_of_points=N,
                               time_step_s=dt,
                               center_frequency_Hz=center_freq)
 
+    A_sqrt_W = np.sqrt(1) 
+    duration_s = 100e-12 
 
+    input_signal= InputSignal(time_freq,
+                   amplitude_sqrt_W=A_sqrt_W,
+                   duration_s=duration_s,
+                   pulse_type="sqrt_triangle",
+                   describe_input_signal_flag=False,FFT_tol=1e-4)
 
-    alpha = 0#-0.22/1e3  # dB/m
+    alpha = 1000/1e3#-0.22/1e3  # dB/m
 
 
     # beta_list = [-3.051721e-27,
@@ -6024,34 +6037,38 @@ if __name__ == "__main__":
     #               1.8802e-128,
     #               -1.5054e-143]  # [s^2/m,s^3/m,...]  s^(entry+2)/m
 
-    beta_list = [5e-27]   # [s^2/m,s^3/m,...]  s^(entry+2)/m
+    beta_list = [5e-25]   # [s^2/m,s^3/m,...]  s^(entry+2)/m
     #-25ps^2/km
     #-25e-3 ps^2/m
     #-25e-3 (1e-12)^2 s^2/m
     #-25e-27 s^2/m
 
-    gamma_test = 1e-3  # 1/W/m
+    gamma_test = 100e-3  # 1/W/m
 
-    length = 1e3#0.05  # m
-    number_of_steps = 2**6
+    length_gain = 20#0.05  # m
+    number_of_steps = 2**8
 
-    fiber_test = FiberSpan(
-        length,
-        number_of_steps,
-        gamma_test,
-        beta_list,
-        alpha)
+    fiber_gain = FiberSpan(
+        length_m=length_gain,
+        number_of_steps= number_of_steps,
+        gamma_per_W_per_m=gamma_test,
+        beta_list= beta_list,
+        alpha_dB_per_m= alpha,
+        raman_model="silica_exact",
+        approximate_raman_flag=True)
 
-    A_sqrt_W = np.sqrt(1) #5kW peak power
-    duration_s = 100e-12 #15fs duration
+    fiber_neg_disp = FiberSpan(
+        length_m=35,
+        number_of_steps=2*4,
+        gamma_per_W_per_m=0,
+        beta_list=[-5e-25],
+        alpha_dB_per_m=0)
 
-    input_signal= InputSignal(time_freq,
-                   amplitude_sqrt_W=A_sqrt_W,
-                   duration_s=duration_s,
-                   pulse_type="gauss",
-                   describe_input_signal_flag=False)
 
-    ssfm_result_list      = SSFM(fiber=fiber_test,input_signal=input_signal)
-    ssfm_result_list      = SSFM(fiber=[fiber_test,fiber_test,fiber_test],input_signal=input_signal)
-    ssfm_result_list      = SSFM(fiber=FiberLink([fiber_test,fiber_test,fiber_test]),input_signal=input_signal)
 
+    ssfm_result_list      = SSFM(fiber=[fiber_gain,fiber_neg_disp],input_signal=input_signal,show_progress_flag=True)
+
+    nrange = 200
+    dB_cutoff = -40
+    plot_first_and_last_pulse(ssfm_result_list,nrange,dB_cutoff)
+    plot_pulse_matrix_2D(ssfm_result_list,nrange,dB_cutoff)
