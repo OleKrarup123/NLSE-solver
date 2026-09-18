@@ -15,6 +15,8 @@ def simulate_solitons():
     Simulates the propagation of solitons through a fiber with anormalous dispersion.
 
     """
+    os.chdir(os.path.realpath(os.path.dirname(__file__))) #Change directory to current folder to make sure output is saved in the correct place. 
+
     ################ Set up time axis of simulation ################ 
     N = 2 ** 15  # Number of points on the time axis
     dt = 10e-15  # Time resolution [s]

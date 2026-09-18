@@ -78,6 +78,109 @@ QAM64 = np.sqrt(1/2)*np.array([ 1+1j, 5/7+1j,3/7+1j, 1/7+1j, 1+1j*5/7, 5/7+1j*5/
                                1-1j, 5/7-1j,3/7-1j, 1/7-1j, 1-1j*5/7, 5/7-1j*5/7,3/7-1j*5/7, 1/7-1j*5/7,1-1j*3/7, 5/7-1j*3/7,3/7-1j*3/7, 1/7-1j*3/7,1-1j*1/7, 5/7-1j*1/7,3/7-1j*1/7, 1/7-1j*1/7   ,
                                -1-1j, -5/7-1j,-3/7-1j, -1/7-1j, -1-1j*5/7, -5/7-1j*5/7,-3/7-1j*5/7, -1/7-1j*5/7,-1-1j*3/7, -5/7-1j*3/7,-3/7-1j*3/7, -1/7-1j*3/7,-1-1j*1/7, -5/7-1j*1/7,-3/7-1j*1/7, -1/7-1j*1/7   ])
 
+
+
+def dB2lin(Val_dB: float) -> float:
+    """
+    Converts value in dB to value in linear scale
+
+    Parameters
+    ----------
+    Val_dB : float
+        Value in dB.
+
+    Returns
+    -------
+    float
+        Value in decimal.
+
+    """
+    return np.power(10,Val_dB / 10)
+
+
+def lin2dB(Val_lin: float) -> float:
+    """
+    Converts value in linear scale to value in dB
+
+    Parameters
+    ----------
+    Val_lin : float
+        Value in decimal.
+
+    Returns
+    -------
+    float
+        Value in dB.
+
+    """
+    return 10 * np.log10(Val_lin)
+
+
+def wavelength_to_freq(wavelength_m: float) -> float:
+    """
+    Converts wavelength in m to frequency in Hz
+
+    Converts wavelength in m to frequency in Hz using f=c/lambda
+
+    Parameters:
+        wavelength_m (float): Wavelength in m
+
+    Returns:
+        float: Frequency in Hz
+    """
+    return LIGHTSPEED_M_PER_S / wavelength_m
+
+
+def freq_to_wavelength(freq_Hz: float) -> float:
+    """
+    Converts frequency in Hz to wavelength in m
+
+    Converts frequency in Hz to wavelength in m using lambda=c/f
+
+    Parameters:
+        freq_Hz (float): Frequency in Hz
+
+    Returns:
+        float: Wavelength in m
+    """
+    return LIGHTSPEED_M_PER_S / freq_Hz
+
+
+def wavelength_BW_to_freq_BW(wavelength_m: float,
+                             wavelengthBW_m: float
+                             ) -> float:
+    """
+    Converts bandwidth in m to bandwidth in Hz
+
+    A signal centered at lambda_0 with bandwidth specified in terms
+    of wavelength will have a frequency bandwidth of c*lambda_BW/lambda**2
+
+    Parameters:
+        wavelength_m   (float): Wavelength in m
+        wavelengthBW_m (float): Wavelength bandwidth in m
+
+    Returns:
+        float: Frequency bandwidth in Hz
+    """
+    return LIGHTSPEED_M_PER_S * wavelengthBW_m / wavelength_m ** 2
+
+
+def freq_BW_to_wavelength_BW(freq_Hz: float, freqBW_Hz: float) -> float:
+    """
+    Converts bandwidth in Hz to bandwidth in m
+
+    A signal centered at f_0 with bandwidth specified in terms of frequency
+    will have a wavelength bandwidth of c*freq_BW/freq**2
+
+    Parameters:
+        freq_Hz   (float): Frequency in Hz
+        freqBW_Hz (float): Frequency bandwidth in Hz
+
+    Returns:
+        float: Wavelength bandwidth in m
+    """
+    return LIGHTSPEED_M_PER_S * freqBW_Hz / freq_Hz ** 2
+
 def get_freq_range_from_time(time_s: npt.NDArray[float]
                              ) -> npt.NDArray[float]:
     """
@@ -472,7 +575,10 @@ class TimeFreq:
 
         self.f_min_Hz = self.f_rel_Hz()[0]
         self.f_max_Hz = self.f_rel_Hz()[-1]
-
+        self.wl_max_m = freq_to_wavelength(np.min(self.f_abs_Hz()))
+        self.wl_center_m = freq_to_wavelength(self.center_frequency_Hz)
+        self.wl_min_m = freq_to_wavelength(np.max(self.f_abs_Hz()))
+                
         self.freq_step_Hz = self.f_rel_Hz()[1] - self.f_rel_Hz()[0]
 
         assert np.min(self.center_frequency_Hz +
@@ -592,6 +698,19 @@ class TimeFreq:
             f"Frequency resolution = {self.freq_step_Hz/1e6:>10.3f}MHz",
             file=d,
         )
+        print(
+            f"Max wavelength = {self.wl_max_m/1e-9:>10.3f}nm",
+            file=d,
+        )        
+        print(
+            f"Center wavelength = {self.wl_center_m/1e-9:>10.3f}nm",
+            file=d,
+        )            
+        print(
+            f"Min wavelength = {self.wl_min_m/1e-9:>10.3f}nm",
+            file=d,
+        )   
+
         print("   ", file=d)
 
 
@@ -1356,6 +1475,7 @@ class FiberSpan:
     raman_model: str = "None"
     approximate_raman_flag: bool = False
     relative_raman_contribution: float = 0.0
+    reference_freq_for_beta_list_Hz: float = 0 #The frequency for which the values of beta_list were calculated. TODO: Allow user to change carrier freq of input signal without recalculating the beta values.
     input_atten_dB: float = 0.0
     input_amp_dB: float = 0.0
     input_noise_factor_dB: float = -1e3
@@ -1603,6 +1723,28 @@ class FiberSpan:
     def z_m(self):
         return np.linspace(0, self.length_m, self.number_of_steps + 1)
 
+    def plot_beta2_versus_freq(self,freq_min_Hz=-10e12,freq_max_Hz=10e12):
+
+
+
+        freq_rel_Hz = np.linspace(freq_min_Hz,freq_max_Hz,1000)
+        beta2_s2_per_m=np.zeros_like(freq_rel_Hz)
+        for idx,entry in enumerate(self.beta_list):
+            beta2_s2_per_m += entry/factorial(idx)*(2*pi*freq_rel_Hz)**(idx)
+
+        fplot_THz = (freq_rel_Hz+self.reference_freq_for_beta_list_Hz)/1e12
+        fig,ax=plt.subplots()
+        ax.set_title("Dispersion curve of fiber")
+        ax.plot(fplot_THz,beta2_s2_per_m,color="C2",label="$\\beta_2$")
+
+
+        ax.axhline(y=0,color="k",label="$\\beta_2=0$")
+        ax.axvline(x=self.reference_freq_for_beta_list_Hz/1e12,label=f"Ref. freq. = {self.reference_freq_for_beta_list_Hz/1e12:.1f}THz")
+        ax.set_xlabel("Freq. [THz]")
+        ax.set_ylabel("$\\beta_2$ [$s^2/m$]")
+        ax.legend()
+        plt.show()
+
     def get_fiber_info_dict(self):
 
 
@@ -1768,13 +1910,13 @@ class FiberLink:
         return self.get_total_gain_dB()-self.get_total_loss_dB()
 
     def get_total_loss_lin(self):
-        return dB_to_lin(self.get_total_loss_dB())
+        return dB2lin(self.get_total_loss_dB())
 
     def get_total_gain_lin(self):
-        return dB_to_lin(self.get_total_gain_dB())
+        return dB2lin(self.get_total_gain_dB())
 
     def get_total_gainloss_lin(self):
-        return dB_to_lin(self.get_total_gainloss_dB())
+        return dB2lin(self.get_total_gainloss_dB())
 
     def get_total_length(self):
         length_so_far = 0.0
@@ -1992,6 +2134,38 @@ class InputSignal:
 
 
 
+
+# Fiber and input signal from the following paper https://www.sciencedirect.com/science/article/pii/S2211379720317228
+
+
+input_signal_from_SC_paper = InputSignal(time_freq=TimeFreq(number_of_points=2**14, # Number of points
+                            time_step_s=1.8e-15,   # Time resolution [s]
+                            center_frequency_Hz=FREQ_1060_NM_HZ,
+                            describe_time_freq_flag=False),
+
+                            duration_s=0.1667895841606626e-12,
+                            amplitude_sqrt_W=np.sqrt(50),
+                            pulse_type="sech",
+                            FFT_tol=1e-5,
+                            time_offset_s=-1.5e-12,
+                            describe_input_signal_flag=False)
+
+fiber_from_SC_paper = FiberSpan(length_m=5,
+                        number_of_steps=2**10,
+                        gamma_per_W_per_m=0.09,
+                        beta_list=[-3.051721e-27,
+                                    7.29029e-41,
+                                    -1.08817e-55,
+                                    2.8940999999999862e-70,
+                                    4.8348e-89,
+                                    -1.1464e-113,
+                                    1.8802e-128,
+                                    -1.5054e-143],  # [s^2/m,s^3/m,...]  s^(entry+2)/m,
+                        alpha_dB_per_m=0.0,
+                        use_self_steepening_flag=True,
+                        raman_model="agrawal",
+                        describe_fiber_flag=False,
+                        reference_freq_for_beta_list_Hz=input_signal_from_SC_paper.time_freq.center_frequency_Hz)
 
 class SSFMResult:
     """
@@ -2762,8 +2936,8 @@ def get_noise_PSD(NF_dB: float,
         PSD in units of [J/Hz] at a certain frequency for a given noise factor, gain and resolution.
     """
 
-    NF_lin = dB_to_lin(NF_dB)
-    G_lin = dB_to_lin(gain_dB)
+    NF_lin = dB2lin(NF_dB)
+    G_lin = dB2lin(gain_dB)
     noise_PSD = 0.5 * NF_lin * G_lin * PLANCKCONST_J_PER_HZ * f_Hz / df_Hz
     return noise_PSD
 
@@ -2785,7 +2959,7 @@ def SSFM(
     fiber: FiberSpan | list[FiberSpan] | FiberLink,
     input_signal: InputSignal,
     experiment_name: str = "most_recent_run",
-    show_progress_flag: bool = False,
+    show_progress_flag: bool = True,
 ) -> list[SSFMResult]:
     """
     Runs the Split-Step Fourier method and calculates field throughout fiber
@@ -2934,7 +3108,7 @@ def SSFM(
 
 
 
-        input_atten_field_lin = np.sqrt(dB_to_lin(fiber.input_atten_dB))
+        input_atten_field_lin = np.sqrt(dB2lin(fiber.input_atten_dB))
         input_disp_comp_factor = np.exp(1j*fiber.input_disp_comp_s2*(2*pi*f_rel_Hz)**2)
         output_disp_comp_factor = 1.0
 
@@ -3006,12 +3180,12 @@ def SSFM(
             if z_step_index == fiber.number_of_steps - 1:
                 randomPhases = np.random.uniform(-pi, pi, len(f_rel_Hz))
                 randomPhaseFactor = np.exp(1j * randomPhases)
-                output_atten_field_lin = np.sqrt(dB_to_lin(
+                output_atten_field_lin = np.sqrt(dB2lin(
                     fiber.output_atten_dB))
                 output_filter_field_array = output_filter
                 output_disp_comp_factor = np.exp(1j*fiber.output_disp_comp_s2*(2*pi*f_rel_Hz)**2)
 
-                output_amp_field_factor = dB_to_lin(fiber.output_amp_dB/2)
+                output_amp_field_factor = dB2lin(fiber.output_amp_dB/2)
                 noise_ASE_array = randomPhaseFactor * np.sqrt(
                     get_noise_PSD(
                         fiber.output_noise_factor_dB,
@@ -4687,9 +4861,9 @@ def plot_everything_about_result(
 
 def wavelet(t,duration_s,frequency_Hz):
 
-    wl = np.exp(-1j*2*pi*frequency_Hz*t)*np.sqrt(np.exp(-0.5*(t/duration_s)**2 )/np.sqrt(2*pi)/duration_s)
+    gaussian_wavelet = np.exp(-1j*2*pi*frequency_Hz*t)*np.sqrt(np.exp(-0.5*(t/duration_s)**2 )/np.sqrt(2*pi)/duration_s)
 
-    return wl
+    return gaussian_wavelet
 
 
 def plot_first_and_last_spectrogram(ssfm_result_list: list[SSFMResult],
@@ -4795,7 +4969,7 @@ def plot_spectrogram(time_freq:TimeFreq,
     ax.set_title(f"Spectrogram of {label} pulse")
     T, F = np.meshgrid(t, f_abs[Nmin_spectrum:Nmax_spectrum])
 
-    surf = ax.contourf(T / scaling_factor_time, F / scaling_factor_freq, lin_to_dB( Z) , levels=40)
+    surf = ax.contourf(T / scaling_factor_time, F / scaling_factor_freq, lin2dB( Z) , levels=40)
     ax.set_xlabel(f"Time. [{prefix_time}s]")
     ax.set_ylabel(f"Freq. [{prefix_freq}Hz]")
     tkw = dict(size=4, width=1.5)
@@ -4946,7 +5120,7 @@ def make_spectrogram_gif(ssfm_result_list: list[SSFMResult],
     # Initialize figure
     fig, ax = plt.subplots()
     fig.patch.set_facecolor('white')
-    surf = ax.contourf(T / scaling_factor_time, F / scaling_factor_freq, lin_to_dB( Z) , levels=40)
+    surf = ax.contourf(T / scaling_factor_time, F / scaling_factor_freq, lin2dB( Z) , levels=40)
 
     cbar = fig.colorbar(surf, ax=ax)
 
@@ -4982,7 +5156,7 @@ def make_spectrogram_gif(ssfm_result_list: list[SSFMResult],
 
 
 
-        surf = ax.contourf(T / scaling_factor_time, F / scaling_factor_freq, lin_to_dB( Z) , levels=40)
+        surf = ax.contourf(T / scaling_factor_time, F / scaling_factor_freq, lin2dB( Z) , levels=40)
 
         tkw = dict(size=4, width=1.5)
 
@@ -5142,7 +5316,7 @@ def make_spectrogram_gif_2x1(ssfm_result_list_list: list[list[SSFMResult]],
     # Initialize figure
     fig, ax = plt.subplots()
     fig.patch.set_facecolor('white')
-    surf = ax.contourf(T / scaling_factor_time, F / scaling_factor_freq, lin_to_dB( Z) , levels=40)
+    surf = ax.contourf(T / scaling_factor_time, F / scaling_factor_freq, lin2dB( Z) , levels=40)
 
     cbar = fig.colorbar(surf, ax=ax)
 
@@ -5178,7 +5352,7 @@ def make_spectrogram_gif_2x1(ssfm_result_list_list: list[list[SSFMResult]],
 
 
 
-        surf = ax.contourf(T / scaling_factor_time, F / scaling_factor_freq, lin_to_dB( Z) , levels=40)
+        surf = ax.contourf(T / scaling_factor_time, F / scaling_factor_freq, lin2dB( Z) , levels=40)
 
         tkw = dict(size=4, width=1.5)
 
@@ -5274,106 +5448,7 @@ def waveletTransform(
     plt.show()
 
 
-def dB_to_lin(Val_dB: float) -> float:
-    """
-    Converts value in dB to value in linear scale
 
-    Parameters
-    ----------
-    Val_dB : float
-        Value in dB.
-
-    Returns
-    -------
-    float
-        Value in decimal.
-
-    """
-    return np.power(10,Val_dB / 10)
-
-
-def lin_to_dB(Val_lin: float) -> float:
-    """
-    Converts value in linear scale to value in dB
-
-    Parameters
-    ----------
-    Val_lin : float
-        Value in decimal.
-
-    Returns
-    -------
-    float
-        Value in dB.
-
-    """
-    return 10 * np.log10(Val_lin)
-
-
-def wavelength_to_freq(wavelength_m: float) -> float:
-    """
-    Converts wavelength in m to frequency in Hz
-
-    Converts wavelength in m to frequency in Hz using f=c/lambda
-
-    Parameters:
-        wavelength_m (float): Wavelength in m
-
-    Returns:
-        float: Frequency in Hz
-    """
-    return LIGHTSPEED_M_PER_S / wavelength_m
-
-
-def freq_to_wavelength(freq_Hz: float) -> float:
-    """
-    Converts frequency in Hz to wavelength in m
-
-    Converts frequency in Hz to wavelength in m using lambda=c/f
-
-    Parameters:
-        freq_Hz (float): Frequency in Hz
-
-    Returns:
-        float: Wavelength in m
-    """
-    return LIGHTSPEED_M_PER_S / freq_Hz
-
-
-def wavelength_BW_to_freq_BW(wavelength_m: float,
-                             wavelengthBW_m: float
-                             ) -> float:
-    """
-    Converts bandwidth in m to bandwidth in Hz
-
-    A signal centered at lambda_0 with bandwidth specified in terms
-    of wavelength will have a frequency bandwidth of c*lambda_BW/lambda**2
-
-    Parameters:
-        wavelength_m   (float): Wavelength in m
-        wavelengthBW_m (float): Wavelength bandwidth in m
-
-    Returns:
-        float: Frequency bandwidth in Hz
-    """
-    return LIGHTSPEED_M_PER_S * wavelengthBW_m / wavelength_m ** 2
-
-
-def freq_BW_to_wavelength_BW(freq_Hz: float, freqBW_Hz: float) -> float:
-    """
-    Converts bandwidth in Hz to bandwidth in m
-
-    A signal centered at f_0 with bandwidth specified in terms of frequency
-    will have a wavelength bandwidth of c*freq_BW/freq**2
-
-    Parameters:
-        freq_Hz   (float): Frequency in Hz
-        freqBW_Hz (float): Frequency bandwidth in Hz
-
-    Returns:
-        float: Wavelength bandwidth in m
-    """
-    return LIGHTSPEED_M_PER_S * freqBW_Hz / freq_Hz ** 2
 
 
 def compare_field_powers(field_1: npt.NDArray[complex],

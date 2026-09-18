@@ -13,6 +13,7 @@ rcParams['lines.linewidth'] = 3
 
 
 if __name__ == "__main__":
+    os.chdir(os.path.realpath(os.path.dirname(__file__))) #Change directory to current folder to make sure output is saved in the correct place. 
 
     # Run the raman.py example with a small number of steps to shorten the time it takes to
     # produce the animation. 

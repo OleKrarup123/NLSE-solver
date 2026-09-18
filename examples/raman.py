@@ -33,6 +33,8 @@ def simulate_raman(number_of_steps=2**8,show_plots=False):
     Simulates the Raman effect.
 
     """
+    os.chdir(os.path.realpath(os.path.dirname(__file__))) #Change directory to current folder to make sure output is saved in the correct place. 
+
     ################ Set up time axis of simulation ################ 
     N = 2 ** 15  # Number of points on the time axis
     dt = 2.5e-15  # Time resolution [s]
@@ -151,11 +153,11 @@ def simulate_raman(number_of_steps=2**8,show_plots=False):
 
     ## Run all the simulations and plot the pulse and spectrum evolutions. You may comment out any of these lines to make
     ## it easier to compare two cases individually. 
-    ssfm_result_list_no_raman       = SSFM(fiber_link=fiber_link_no_raman,input_signal=input_signal,show_progress_flag=show_plots)
-    ssfm_result_list_agrawal        = SSFM(fiber_link=fiber_link_agrawal,input_signal=input_signal,show_progress_flag=show_plots)
-    ssfm_result_list_silica         = SSFM(fiber_link=fiber_link_silica,input_signal=input_signal,show_progress_flag=show_plots)
-    ssfm_result_list_silica_approx  = SSFM(fiber_link=fiber_link_silica_approx,input_signal=input_signal,show_progress_flag=show_plots)
-    ssfm_result_list_custom         = SSFM(fiber_link=fiber_link_custom,input_signal=input_signal,show_progress_flag=show_plots)
+    ssfm_result_list_no_raman       = SSFM(fiber=fiber_link_no_raman,input_signal=input_signal,show_progress_flag=show_plots)
+    ssfm_result_list_agrawal        = SSFM(fiber=fiber_link_agrawal,input_signal=input_signal,show_progress_flag=show_plots)
+    ssfm_result_list_silica         = SSFM(fiber=fiber_link_silica,input_signal=input_signal,show_progress_flag=show_plots)
+    ssfm_result_list_silica_approx  = SSFM(fiber=fiber_link_silica_approx,input_signal=input_signal,show_progress_flag=show_plots)
+    ssfm_result_list_custom         = SSFM(fiber=fiber_link_custom,input_signal=input_signal,show_progress_flag=show_plots)
 
     if show_plots:
         plot_result_2D(ssfm_result_list_no_raman)

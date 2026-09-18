@@ -16,6 +16,8 @@ def simulate_multiple_fibers():
     Use Chirped Pulse Amplification (CPA) to illustrate 
     how to set up a link consisting of multiple fibers.
     """
+    os.chdir(os.path.realpath(os.path.dirname(__file__))) #Change directory to current folder to make sure output is saved in the correct place. 
+
     ################ Set up time axis of simulation ################ 
     N = 2 ** 15  # Number of points on the time axis
     dt = 100e-15  # Time resolution [s]
@@ -75,7 +77,7 @@ def simulate_multiple_fibers():
                    FFT_tol=1e-5)
 
 
-    ssfm_result_list_CPA = SSFM(fiber_link=fiber_link_CPA,input_signal=input_signal,show_progress_flag=True)
+    ssfm_result_list_CPA = SSFM(fiber=fiber_link_CPA,input_signal=input_signal,show_progress_flag=True)
 
     nrange_pulse = 1500
     dB_cutoff_pulse=-40

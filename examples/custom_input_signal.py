@@ -21,6 +21,8 @@ def custom_signal():
     such as Gaussian, sech, square, sinc etc. Sometimes however, you may need to define a custom
     input signal manually. 
     """
+    os.chdir(os.path.realpath(os.path.dirname(__file__))) #Change directory to current folder to make sure output is saved in the correct place. 
+
     ################ Set up time axis of simulation ################ 
     N = 2 ** 15  # Number of points on the time axis
     dt = 10e-12  # Time resolution [s]
@@ -105,6 +107,8 @@ def custom_signal_advanced():
     and at different carrier frequencies. 
 
     """
+    os.chdir(os.path.realpath(os.path.dirname(__file__))) #Change directory to current folder to make sure output is saved in the correct place. 
+
     np.random.seed(123) #Fixed random seed for repeatable 64QAM modulation
 
     ################ Set up time axis of simulation ################ 
