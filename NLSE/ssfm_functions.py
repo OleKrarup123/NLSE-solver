@@ -2640,7 +2640,7 @@ def create_output_directory(experiment_name: str) -> [(str, str), datetime]:
         datetime object of time where the run was started.
 
     """
-    os.chdir(os.path.realpath(os.path.dirname(__file__)))
+    #os.chdir(os.path.realpath(os.path.dirname(__file__)))
     base_dir = os.getcwd()
     os.chdir(base_dir)
 
@@ -2664,7 +2664,8 @@ def create_output_directory(experiment_name: str) -> [(str, str), datetime]:
     os.chdir(current_dir)
 
     print(f"Current time is {current_time}")
-    print("Current dir is " + current_dir)
+    print("Base directory is " + base_dir)
+    print("Current directory is " + current_dir)
 
     return (base_dir, current_dir), current_time
 
